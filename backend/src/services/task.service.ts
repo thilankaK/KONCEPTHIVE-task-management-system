@@ -9,20 +9,55 @@ interface CreateTaskData {
   userId: string;
 }
 
+interface GetTasksOptions {
+  userId: string;
+  search?: string;
+  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  sortBy?: "newest" | "oldest" | "dueDate";
+}
+
 export const createTask = async (data: CreateTaskData) => {
   return prisma.task.create({
     data,
   });
 };
 
-export const getAllTasks = async (userId: string) => {
+export const getAllTasks = async ({
+  userId,
+  search,
+  status,
+  priority,
+  sortBy = "newest",
+}: GetTasksOptions) => {
+  const orderBy =
+    sortBy === "oldest"
+      ? { createdAt: "asc" as const }
+      : sortBy === "dueDate"
+      ? { dueDate: "asc" as const }
+      : { createdAt: "desc" as const };
+
   return prisma.task.findMany({
     where: {
       userId,
+
+      ...(search && {
+        title: {
+          contains: search,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(status && {
+        status,
+      }),
+
+      ...(priority && {
+        priority,
+      }),
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+
+    orderBy,
   });
 };
 
@@ -90,4 +125,59 @@ export const deleteTask = async (
       id: taskId,
     },
   });
+};
+
+export const getDashboardStats = async (userId: string) => {
+  const [
+    totalTasks,
+    pendingTasks,
+    inProgressTasks,
+    completedTasks,
+    overdueTasks,
+  ] = await Promise.all([
+    prisma.task.count({
+      where: { userId },
+    }),
+
+    prisma.task.count({
+      where: {
+        userId,
+        status: "PENDING",
+      },
+    }),
+
+    prisma.task.count({
+      where: {
+        userId,
+        status: "IN_PROGRESS",
+      },
+    }),
+
+    prisma.task.count({
+      where: {
+        userId,
+        status: "COMPLETED",
+      },
+    }),
+
+    prisma.task.count({
+      where: {
+        userId,
+        dueDate: {
+          lt: new Date(),
+        },
+        NOT: {
+          status: "COMPLETED",
+        },
+      },
+    }),
+  ]);
+
+  return {
+    totalTasks,
+    pendingTasks,
+    inProgressTasks,
+    completedTasks,
+    overdueTasks,
+  };
 };

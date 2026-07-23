@@ -56,15 +56,97 @@ export const getAllTasks = async (
   res: Response
 ) => {
   try {
-    const tasks = await taskService.getAllTasks(req.userId!);
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+
+    const status =
+      typeof req.query.status === "string"
+        ? req.query.status.toUpperCase()
+        : undefined;
+
+    const priority =
+      typeof req.query.priority === "string"
+        ? req.query.priority.toUpperCase()
+        : undefined;
+
+    const sortBy =
+      typeof req.query.sortBy === "string"
+        ? req.query.sortBy
+        : "newest";
+
+    const validStatuses = [
+      "PENDING",
+      "IN_PROGRESS",
+      "COMPLETED",
+    ];
+
+    const validPriorities = [
+      "LOW",
+      "MEDIUM",
+      "HIGH",
+    ];
+
+    const validSortOptions = [
+      "newest",
+      "oldest",
+      "dueDate",
+    ];
+
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status filter.",
+      });
+    }
+
+    if (priority && !validPriorities.includes(priority)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid priority filter.",
+      });
+    }
+
+    if (!validSortOptions.includes(sortBy)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid sort option.",
+      });
+    }
+
+    const tasks = await taskService.getAllTasks({
+      userId: req.userId!,
+      search,
+      status: status as
+        | "PENDING"
+        | "IN_PROGRESS"
+        | "COMPLETED"
+        | undefined,
+      priority: priority as
+        | "LOW"
+        | "MEDIUM"
+        | "HIGH"
+        | undefined,
+      sortBy: sortBy as
+        | "newest"
+        | "oldest"
+        | "dueDate",
+    });
 
     return res.status(200).json({
       success: true,
       count: tasks.length,
+      filters: {
+        search: search ?? null,
+        status: status ?? null,
+        priority: priority ?? null,
+        sortBy,
+      },
       data: tasks,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Get tasks error:", error);
 
     return res.status(500).json({
       success: false,
@@ -220,6 +302,31 @@ export const deleteTask = async (
     });
   } catch (error) {
     console.error("Delete task error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+
+
+export const getDashboardStats = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const stats = await taskService.getDashboardStats(
+      req.userId!
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
 
     return res.status(500).json({
       success: false,

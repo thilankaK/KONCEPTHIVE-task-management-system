@@ -4,6 +4,7 @@ import {
   createTask,
   deleteTask,
   getAllTasks,
+  getDashboardStats,
   getTaskById,
   updateTask,
 } from "../controllers/task.controller";
@@ -17,6 +18,8 @@ router.use(authenticate);
 router.post("/", createTask);
 
 router.get("/", getAllTasks);
+
+router.get("/dashboard", getDashboardStats);
 
 router.get("/:id", getTaskById);
 
