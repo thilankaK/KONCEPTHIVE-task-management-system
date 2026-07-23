@@ -74,33 +74,158 @@ export const getAllTasks = async (
 };
 
 export const getTaskById = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
-  return res.status(200).json({
-    success: true,
-    message: "Get Task By ID Endpoint",
-  });
+  try {
+    const taskId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    if (!taskId) {
+      return res.status(400).json({
+        success: false,
+        message: "Task ID is required.",
+      });
+    }
+
+    const task = await taskService.getTaskById(
+      taskId,
+      req.userId!
+    );
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: task,
+    });
+  } catch (error) {
+    console.error("Get task error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
 };
 
 export const updateTask = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
-  return res.status(200).json({
-    success: true,
-    message: "Update Task Endpoint",
-  });
+  try {
+    const taskId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    if (!taskId) {
+      return res.status(400).json({
+        success: false,
+        message: "Task ID is required.",
+      });
+    }
+
+    const {
+      title,
+      description,
+      priority,
+      status,
+      dueDate,
+    } = req.body;
+
+    if (
+      !title &&
+      description === undefined &&
+      !priority &&
+      !status &&
+      !dueDate
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required to update.",
+      });
+    }
+
+    const updatedTask = await taskService.updateTask(
+      taskId,
+      req.userId!,
+      {
+        title,
+        description,
+        priority,
+        status,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+      }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Task updated successfully.",
+      data: updatedTask,
+    });
+  } catch (error) {
+    console.error("Update task error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
 };
 
 export const deleteTask = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
-  return res.status(200).json({
-    success: true,
-    message: "Delete Task Endpoint",
-  });
+  try {
+    const taskId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    if (!taskId) {
+      return res.status(400).json({
+        success: false,
+        message: "Task ID is required.",
+      });
+    }
+
+    const deletedTask = await taskService.deleteTask(
+      taskId,
+      req.userId!
+    );
+
+    if (!deletedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Task deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Delete task error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
 };
 
 

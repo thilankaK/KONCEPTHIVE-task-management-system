@@ -26,14 +26,68 @@ export const getAllTasks = async (userId: string) => {
   });
 };
 
-export const getTaskById = async () => {
-  return;
+export const getTaskById = async (
+  taskId: string,
+  userId: string
+) => {
+  return prisma.task.findFirst({
+    where: {
+      id: taskId,
+      userId,
+    },
+  });
 };
 
-export const updateTask = async () => {
-  return;
+interface UpdateTaskData {
+  title?: string;
+  description?: string;
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  dueDate?: Date;
+}
+
+export const updateTask = async (
+  taskId: string,
+  userId: string,
+  data: UpdateTaskData
+) => {
+  const existingTask = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      userId,
+    },
+  });
+
+  if (!existingTask) {
+    return null;
+  }
+
+  return prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data,
+  });
 };
 
-export const deleteTask = async () => {
-  return;
+export const deleteTask = async (
+  taskId: string,
+  userId: string
+) => {
+  const existingTask = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      userId,
+    },
+  });
+
+  if (!existingTask) {
+    return null;
+  }
+
+  return prisma.task.delete({
+    where: {
+      id: taskId,
+    },
+  });
 };
