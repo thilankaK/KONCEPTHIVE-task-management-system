@@ -31,7 +31,7 @@ function Sidebar({ collapsed, onToggle }: SidebarProps) {
     {
       label: "Tasks",
       icon: CheckSquare,
-      path: "/dashboard",
+      path: "/tasks",
     },
   ];
 
