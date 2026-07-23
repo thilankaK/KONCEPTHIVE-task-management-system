@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 
 import authRoutes from "./routes/auth.routes";
+import taskRoutes from "./routes/task.routes";
 
 dotenv.config();
 
@@ -21,4 +22,5 @@ app.get("/", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 
+app.use("/api/tasks", taskRoutes);
 export default app;
