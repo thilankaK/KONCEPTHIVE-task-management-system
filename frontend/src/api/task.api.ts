@@ -4,6 +4,8 @@ import api from "./api";
 import type {
   DashboardStatsResponse,
   GetTasksParams,
+  TaskFormData,
+  TaskResponse,
   TasksResponse,
 } from "../types/task.types";
 
@@ -31,6 +33,40 @@ export const getTasks = async (
       },
     }
   );
+
+  return response.data;
+};
+
+export const createTask = async (
+  data: TaskFormData
+): Promise<TaskResponse> => {
+  const response = await api.post<TaskResponse>(
+    "/tasks",
+    data
+  );
+
+  return response.data;
+};
+
+export const updateTask = async (
+  taskId: string,
+  data: Partial<TaskFormData>
+): Promise<TaskResponse> => {
+  const response = await api.put<TaskResponse>(
+    `/tasks/${taskId}`,
+    data
+  );
+
+  return response.data;
+};
+
+export const deleteTask = async (
+  taskId: string
+): Promise<{ success: boolean; message: string }> => {
+  const response = await api.delete<{
+    success: boolean;
+    message: string;
+  }>(`/tasks/${taskId}`);
 
   return response.data;
 };

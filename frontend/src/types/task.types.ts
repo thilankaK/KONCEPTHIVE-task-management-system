@@ -47,3 +47,21 @@ export interface TasksResponse {
   count: number;
   data: Task[];
 }
+
+
+
+
+
+export interface TaskFormData {
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dueDate: string;
+}
+
+export interface TaskResponse {
+  success: boolean;
+  message: string;
+  data: Task;
+}

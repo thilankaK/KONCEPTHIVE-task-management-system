@@ -15,8 +15,9 @@ import type {
 interface TaskTableProps {
   tasks: Task[];
   isLoading: boolean;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
 }
-
 const priorityStyles: Record<TaskPriority, string> = {
   LOW: "bg-emerald-100 text-emerald-700",
   MEDIUM: "bg-amber-100 text-amber-700",
@@ -38,6 +39,8 @@ const formatLabel = (value: string) =>
 function TaskTable({
   tasks,
   isLoading,
+  onEdit,
+  onDelete,
 }: TaskTableProps) {
   if (isLoading) {
     return (
@@ -142,6 +145,7 @@ function TaskTable({
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
+                      onClick={() => onEdit(task)}
                       className="rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
                       aria-label="Edit task"
                     >
@@ -150,6 +154,7 @@ function TaskTable({
 
                     <button
                       type="button"
+                      onClick={() => onDelete(task)}
                       className="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
                       aria-label="Delete task"
                     >
