@@ -128,6 +128,7 @@ import {
   CheckSquare,
   ChevronLeft,
   ChevronRight,
+  FileBarChart2,
   LayoutDashboard,
   LogOut,
 } from "lucide-react";
@@ -173,7 +174,12 @@ function Sidebar({
       label: "Notifications",
       icon: Bell,
       path: "/notifications",
-  },
+    },
+    {
+      label: "Reports",
+      icon: FileBarChart2,
+      path: "/reports",
+    },
   ];
 
   return (
