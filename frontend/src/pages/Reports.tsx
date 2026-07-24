@@ -209,9 +209,16 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 import { getTaskReport } from "../api/report.api";
 import ReportAnalyticsCards from "../components/reports/ReportAnalyticsCards";
@@ -637,87 +644,212 @@ function Reports() {
 
 
 
-const handleExportPdf = async () => {
-  const reportElement = reportContentRef.current;
 
-  if (!report || !reportElement) {
-    toast.error("Report content is not available.");
+
+
+// const handleExportPdf = async () => {
+//   const reportElement = reportContentRef.current;
+
+//   if (!report || !reportElement) {
+//     toast.error("Report content is not available.");
+//     return;
+//   }
+
+//   try {
+//     setIsExportingPdf(true);
+
+//     toast.loading("Generating PDF...", {
+//       id: "pdf-export",
+//     });
+
+//     // Charts and fonts render වෙන්න browser එකට පොඩි වෙලාවක් දෙයි.
+//     await new Promise((resolve) =>
+//       window.setTimeout(resolve, 500)
+//     );
+
+//     const canvas = await html2canvas(
+//       reportElement,
+//       {
+//         scale: 1.5,
+//         useCORS: true,
+//         allowTaint: false,
+//         backgroundColor: "#f8fafc",
+//         logging: false,
+
+//         width: reportElement.scrollWidth,
+//         height: reportElement.scrollHeight,
+
+//         windowWidth:
+//           reportElement.scrollWidth,
+//         windowHeight:
+//           reportElement.scrollHeight,
+
+//         scrollX: 0,
+//         scrollY: -window.scrollY,
+
+//         onclone: (clonedDocument) => {
+//           const clonedReport =
+//             clonedDocument.querySelector(
+//               ".report-print-area"
+//             ) as HTMLElement | null;
+
+//           if (clonedReport) {
+//             clonedReport.style.width =
+//               `${reportElement.scrollWidth}px`;
+
+//             clonedReport.style.maxWidth =
+//               "none";
+
+//             clonedReport.style.overflow =
+//               "visible";
+//           }
+//         },
+//       }
+//     );
+
+//     if (
+//       canvas.width === 0 ||
+//       canvas.height === 0
+//     ) {
+//       throw new Error(
+//         "The report canvas could not be generated."
+//       );
+//     }
+
+//     const imageData =
+//       canvas.toDataURL(
+//         "image/jpeg",
+//         0.92
+//       );
+
+//     const pdf = new jsPDF({
+//       orientation: "portrait",
+//       unit: "mm",
+//       format: "a4",
+//       compress: true,
+//     });
+
+//     const pageWidth =
+//       pdf.internal.pageSize.getWidth();
+
+//     const pageHeight =
+//       pdf.internal.pageSize.getHeight();
+
+//     const margin = 8;
+
+//     const printableWidth =
+//       pageWidth - margin * 2;
+
+//     const printableHeight =
+//       pageHeight - margin * 2;
+
+//     const imageHeight =
+//       (canvas.height *
+//         printableWidth) /
+//       canvas.width;
+
+//     let renderedHeight = 0;
+//     let pageNumber = 1;
+
+//     while (
+//       renderedHeight < imageHeight
+//     ) {
+//       if (pageNumber > 1) {
+//         pdf.addPage();
+//       }
+
+//       const imageY =
+//         margin - renderedHeight;
+
+//       pdf.addImage(
+//         imageData,
+//         "JPEG",
+//         margin,
+//         imageY,
+//         printableWidth,
+//         imageHeight,
+//         undefined,
+//         "FAST"
+//       );
+
+//       pdf.setFontSize(8);
+//       pdf.setTextColor(
+//         100,
+//         116,
+//         139
+//       );
+
+//       pdf.text(
+//         `TaskFlow Report • Page ${pageNumber}`,
+//         pageWidth / 2,
+//         pageHeight - 3,
+//         {
+//           align: "center",
+//         }
+//       );
+
+//       renderedHeight +=
+//         printableHeight;
+
+//       pageNumber += 1;
+//     }
+
+//     pdf.save(
+//       getReportFileName("pdf")
+//     );
+
+//     toast.success(
+//       "PDF report downloaded.",
+//       {
+//         id: "pdf-export",
+//       }
+//     );
+//   } catch (error) {
+//     console.error(
+//       "PDF export error:",
+//       error
+//     );
+
+//     const message =
+//       error instanceof Error
+//         ? error.message
+//         : "Unable to export PDF report.";
+
+//     toast.error(message, {
+//       id: "pdf-export",
+//     });
+//   } finally {
+//     setIsExportingPdf(false);
+//   }
+// };
+
+
+
+
+
+const handleExportPdf = async () => {
+  if (!report) {
+    toast.error("Report data is not available.");
     return;
   }
 
   try {
     setIsExportingPdf(true);
 
-    toast.loading("Generating PDF...", {
+    toast.loading("Generating PDF report...", {
       id: "pdf-export",
     });
 
-    // Charts and fonts render වෙන්න browser එකට පොඩි වෙලාවක් දෙයි.
     await new Promise((resolve) =>
       window.setTimeout(resolve, 500)
     );
-
-    const canvas = await html2canvas(
-      reportElement,
-      {
-        scale: 1.5,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#f8fafc",
-        logging: false,
-
-        width: reportElement.scrollWidth,
-        height: reportElement.scrollHeight,
-
-        windowWidth:
-          reportElement.scrollWidth,
-        windowHeight:
-          reportElement.scrollHeight,
-
-        scrollX: 0,
-        scrollY: -window.scrollY,
-
-        onclone: (clonedDocument) => {
-          const clonedReport =
-            clonedDocument.querySelector(
-              ".report-print-area"
-            ) as HTMLElement | null;
-
-          if (clonedReport) {
-            clonedReport.style.width =
-              `${reportElement.scrollWidth}px`;
-
-            clonedReport.style.maxWidth =
-              "none";
-
-            clonedReport.style.overflow =
-              "visible";
-          }
-        },
-      }
-    );
-
-    if (
-      canvas.width === 0 ||
-      canvas.height === 0
-    ) {
-      throw new Error(
-        "The report canvas could not be generated."
-      );
-    }
-
-    const imageData =
-      canvas.toDataURL(
-        "image/jpeg",
-        0.92
-      );
 
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
       compress: true,
-    });
+    }) as JsPDFWithAutoTable;
 
     const pageWidth =
       pdf.internal.pageSize.getWidth();
@@ -725,64 +857,497 @@ const handleExportPdf = async () => {
     const pageHeight =
       pdf.internal.pageSize.getHeight();
 
-    const margin = 8;
-
-    const printableWidth =
+    const margin = 14;
+    const contentWidth =
       pageWidth - margin * 2;
 
-    const printableHeight =
-      pageHeight - margin * 2;
+    let currentY = 14;
 
-    const imageHeight =
-      (canvas.height *
-        printableWidth) /
-      canvas.width;
+    const addPageFooter = () => {
+      const pageCount =
+        pdf.getNumberOfPages();
 
-    let renderedHeight = 0;
-    let pageNumber = 1;
+      for (
+        let pageNumber = 1;
+        pageNumber <= pageCount;
+        pageNumber += 1
+      ) {
+        pdf.setPage(pageNumber);
 
-    while (
-      renderedHeight < imageHeight
-    ) {
-      if (pageNumber > 1) {
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(
+          margin,
+          pageHeight - 12,
+          pageWidth - margin,
+          pageHeight - 12
+        );
+
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139);
+
+        pdf.text(
+          "Generated by TaskFlow Task Management System",
+          margin,
+          pageHeight - 7
+        );
+
+        pdf.text(
+          `Page ${pageNumber} of ${pageCount}`,
+          pageWidth - margin,
+          pageHeight - 7,
+          {
+            align: "right",
+          }
+        );
+      }
+    };
+
+    const addSectionTitle = (
+      title: string,
+      description?: string
+    ) => {
+      if (currentY > pageHeight - 35) {
         pdf.addPage();
+        currentY = 18;
       }
 
-      const imageY =
-        margin - renderedHeight;
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(15);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(title, margin, currentY);
+
+      currentY += 6;
+
+      if (description) {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 116, 139);
+
+        pdf.text(
+          description,
+          margin,
+          currentY,
+          {
+            maxWidth: contentWidth,
+          }
+        );
+
+        currentY += 7;
+      }
+    };
+
+    const addChartToPdf = async (
+      elementId: string,
+      title: string
+    ) => {
+      const chartElement =
+        document.getElementById(elementId);
+
+      if (!chartElement) {
+        return;
+      }
+
+      if (currentY > pageHeight - 105) {
+        pdf.addPage();
+        currentY = 18;
+      }
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(title, margin, currentY);
+
+      currentY += 5;
+
+      const canvas = await html2canvas(
+        chartElement,
+        {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+        }
+      );
+
+      const imageData =
+        canvas.toDataURL(
+          "image/jpeg",
+          0.94
+        );
+
+      const imageWidth = contentWidth;
+      const calculatedHeight =
+        (canvas.height * imageWidth) /
+        canvas.width;
+
+      const maximumHeight = 92;
+
+      const imageHeight = Math.min(
+        calculatedHeight,
+        maximumHeight
+      );
 
       pdf.addImage(
         imageData,
         "JPEG",
         margin,
-        imageY,
-        printableWidth,
+        currentY,
+        imageWidth,
         imageHeight,
         undefined,
         "FAST"
       );
 
-      pdf.setFontSize(8);
-      pdf.setTextColor(
-        100,
-        116,
-        139
-      );
+      currentY += imageHeight + 10;
+    };
 
-      pdf.text(
-        `TaskFlow Report • Page ${pageNumber}`,
-        pageWidth / 2,
-        pageHeight - 3,
-        {
-          align: "center",
-        }
-      );
+    // Report header
+    pdf.setFillColor(15, 23, 42);
 
-      renderedHeight +=
-        printableHeight;
+    pdf.roundedRect(
+      margin,
+      currentY,
+      contentWidth,
+      44,
+      4,
+      4,
+      "F"
+    );
 
-      pageNumber += 1;
-    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(147, 197, 253);
+    pdf.setFontSize(9);
+    pdf.text(
+      "TASKFLOW",
+      margin + 7,
+      currentY + 9
+    );
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(22);
+    pdf.text(
+      report.report.title,
+      margin + 7,
+      currentY + 21
+    );
+
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(203, 213, 225);
+
+    pdf.text(
+      `Period: ${
+        report.report.period
+          .charAt(0)
+          .toUpperCase() +
+        report.report.period.slice(1)
+      }`,
+      margin + 7,
+      currentY + 33
+    );
+
+    pdf.text(
+      `Date range: ${dayjs(
+        report.report.startDate
+      ).format("DD MMM YYYY")} - ${dayjs(
+        report.report.endDate
+      ).format("DD MMM YYYY")}`,
+      margin + 52,
+      currentY + 33
+    );
+
+    pdf.text(
+      `Generated: ${dayjs(
+        report.report.generatedAt
+      ).format("DD MMM YYYY, hh:mm A")}`,
+      pageWidth - margin - 7,
+      currentY + 33,
+      {
+        align: "right",
+      }
+    );
+
+    currentY += 54;
+
+    // Summary
+    addSectionTitle(
+      "Executive Summary",
+      "Task performance for the selected reporting period."
+    );
+
+    autoTable(pdf, {
+      startY: currentY,
+      theme: "grid",
+      head: [
+        [
+          "Metric",
+          "Value",
+          "Metric",
+          "Value",
+        ],
+      ],
+      body: [
+        [
+          "Total Tasks",
+          report.summary.totalTasks,
+          "Completion Rate",
+          `${report.summary.completionRate}%`,
+        ],
+        [
+          "Pending",
+          report.summary.pendingTasks,
+          "Productivity Score",
+          `${report.summary.productivityScore}%`,
+        ],
+        [
+          "In Progress",
+          report.summary.inProgressTasks,
+          "Overdue Rate",
+          `${report.summary.overduePercentage}%`,
+        ],
+        [
+          "Completed",
+          report.summary.completedTasks,
+          "Average Tasks / Day",
+          report.summary.averageTasksPerDay,
+        ],
+        [
+          "Overdue",
+          report.summary.overdueTasks,
+          "High Priority",
+          `${report.summary.highPriorityPercentage}%`,
+        ],
+      ],
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        textColor: [51, 65, 85],
+      },
+      headStyles: {
+        fillColor: [37, 99, 235],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      margin: {
+        left: margin,
+        right: margin,
+      },
+    });
+
+    currentY =
+      pdf.lastAutoTable.finalY + 10;
+
+    // Advanced analytics
+    addSectionTitle(
+      "Advanced Analytics",
+      "Additional productivity and completion insights."
+    );
+
+    autoTable(pdf, {
+      startY: currentY,
+      theme: "striped",
+      head: [["Analytics Metric", "Value"]],
+      body: [
+        [
+          "Most Common Priority",
+          report.summary.mostCommonPriority ||
+            "N/A",
+        ],
+        [
+          "Most Common Status",
+          report.summary.mostCommonStatus ||
+            "N/A",
+        ],
+        [
+          "Average Completion Time",
+          report.summary
+            .averageCompletionTimeDays ===
+          null
+            ? "N/A"
+            : `${report.summary.averageCompletionTimeDays} days`,
+        ],
+        [
+          "Completed On Time",
+          report.summary.completedOnTime,
+        ],
+        [
+          "Completed Late",
+          report.summary.completedLate,
+        ],
+        [
+          "Report Duration",
+          `${report.summary.reportDurationInDays} days`,
+        ],
+        [
+          "Longest Active Task",
+          report.summary.longestPendingTask
+            ? `${report.summary.longestPendingTask.title} (${report.summary.longestPendingTask.daysPending} days)`
+            : "N/A",
+        ],
+      ],
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [71, 85, 105],
+        textColor: [255, 255, 255],
+      },
+      margin: {
+        left: margin,
+        right: margin,
+      },
+    });
+
+    currentY =
+      pdf.lastAutoTable.finalY + 12;
+
+    // Charts
+    pdf.addPage();
+    currentY = 18;
+
+    addSectionTitle(
+      "Report Charts",
+      "Visual analysis of task status, priorities and activity trends."
+    );
+
+    await addChartToPdf(
+      "report-status-chart",
+      "Status Distribution"
+    );
+
+    await addChartToPdf(
+      "report-priority-chart",
+      "Priority Distribution"
+    );
+
+    await addChartToPdf(
+      "report-creation-chart",
+      "Task Creation Trend"
+    );
+
+    await addChartToPdf(
+      "report-due-date-chart",
+      "Due Date Trend"
+    );
+
+    // Task table
+    pdf.addPage();
+    currentY = 18;
+
+    addSectionTitle(
+      "Task Details",
+      `Tasks created from ${dayjs(
+        report.report.startDate
+      ).format("DD MMM YYYY")} to ${dayjs(
+        report.report.endDate
+      ).format("DD MMM YYYY")}.`
+    );
+
+    autoTable(pdf, {
+      startY: currentY,
+      theme: "grid",
+
+      head: [
+        [
+          "#",
+          "Task",
+          "Priority",
+          "Status",
+          "Due Date",
+          "Created",
+          "Completed",
+        ],
+      ],
+
+      body: report.tasks.map(
+        (task, index) => [
+          index + 1,
+          task.description
+            ? `${task.title}\n${task.description}`
+            : task.title,
+          task.priority,
+          task.status.replaceAll("_", " "),
+          dayjs(task.dueDate).format(
+            "DD MMM YYYY"
+          ),
+          dayjs(task.createdAt).format(
+            "DD MMM YYYY"
+          ),
+          task.completedAt
+            ? dayjs(task.completedAt).format(
+                "DD MMM YYYY"
+              )
+            : "-",
+        ]
+      ),
+
+      styles: {
+        fontSize: 7.5,
+        cellPadding: 2.4,
+        valign: "top",
+        overflow: "linebreak",
+        textColor: [51, 65, 85],
+      },
+
+      headStyles: {
+        fillColor: [15, 23, 42],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 7.5,
+      },
+
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+
+      columnStyles: {
+        0: {
+          cellWidth: 8,
+          halign: "center",
+        },
+        1: {
+          cellWidth: 62,
+        },
+        2: {
+          cellWidth: 18,
+        },
+        3: {
+          cellWidth: 23,
+        },
+        4: {
+          cellWidth: 24,
+        },
+        5: {
+          cellWidth: 24,
+        },
+        6: {
+          cellWidth: 24,
+        },
+      },
+
+      margin: {
+        left: margin,
+        right: margin,
+        bottom: 18,
+      },
+
+      didDrawPage: () => {
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139);
+
+        pdf.text(
+          `${report.report.title} — ${report.report.period}`,
+          margin,
+          pageHeight - 15
+        );
+      },
+    });
+
+    addPageFooter();
 
     pdf.save(
       getReportFileName("pdf")
@@ -800,18 +1365,22 @@ const handleExportPdf = async () => {
       error
     );
 
-    const message =
+    toast.error(
       error instanceof Error
         ? error.message
-        : "Unable to export PDF report.";
-
-    toast.error(message, {
-      id: "pdf-export",
-    });
+        : "Unable to export PDF report.",
+      {
+        id: "pdf-export",
+      }
+    );
   } finally {
     setIsExportingPdf(false);
   }
 };
+
+
+
+
 
   const handlePrint = () => {
     window.print();

@@ -61,7 +61,9 @@ function ReportCharts({
   );
 
   return (
-    <section className="mt-8">
+    <section 
+          id="report-charts-section"
+        className="mt-8">
       <div className="mb-5">
         <h2 className="text-xl font-bold text-slate-900">
           Report Charts
@@ -75,7 +77,9 @@ function ReportCharts({
 
       <div className="grid gap-6 xl:grid-cols-2">
         {/* Status Distribution */}
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article 
+              id="report-status-chart"
+            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-900">
               Status Distribution
@@ -127,7 +131,9 @@ function ReportCharts({
         </article>
 
         {/* Priority Distribution */}
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article 
+              id="report-priority-chart"
+            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-900">
               Priority Distribution
@@ -192,7 +198,9 @@ function ReportCharts({
         </article>
 
         {/* Creation Trend */}
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article 
+              id="report-creation-chart"
+            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-900">
               Task Creation Trend
@@ -250,7 +258,9 @@ function ReportCharts({
         </article>
 
         {/* Due Date Trend */}
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article 
+            id="report-due-date-chart"
+            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-900">
               Due Date Trend
