@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import taskRoutes from "./routes/task.routes";
 import notificationRoutes from "./routes/notification.routes";
+import reportRoutes from "./routes/report.routes";
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/reports", reportRoutes);
 
 
 export default app;
