@@ -219,6 +219,155 @@ export const generateTaskReport = async ({
           ).toFixed(2)
         );
 
+    const reportDurationInDays = Math.max(
+  Math.ceil(
+    (endDate.getTime() - startDate.getTime()) /
+      (24 * 60 * 60 * 1000)
+  ) + 1,
+  1
+);
+
+const averageTasksPerDay = Number(
+  (
+    tasks.length / reportDurationInDays
+  ).toFixed(2)
+);
+
+const highPriorityPercentage =
+  tasks.length === 0
+    ? 0
+    : Number(
+        (
+          (highPriorityTasks.length /
+            tasks.length) *
+          100
+        ).toFixed(2)
+      );
+
+const overduePercentage =
+  tasks.length === 0
+    ? 0
+    : Number(
+        (
+          (overdueTasks.length /
+            tasks.length) *
+          100
+        ).toFixed(2)
+      );
+
+const productivityScore = Number(
+  Math.max(
+    0,
+    Math.min(
+      100,
+      completionRate -
+        overduePercentage * 0.5
+    )
+  ).toFixed(2)
+);
+
+const priorityCounts = {
+  LOW: lowPriorityTasks.length,
+  MEDIUM: mediumPriorityTasks.length,
+  HIGH: highPriorityTasks.length,
+};
+
+const mostCommonPriority =
+  tasks.length === 0
+    ? null
+    : (
+        Object.entries(priorityCounts).sort(
+          (firstItem, secondItem) =>
+            secondItem[1] - firstItem[1]
+        )[0]?.[0] ?? null
+      );
+
+const statusCounts = {
+  PENDING: pendingTasks.length,
+  IN_PROGRESS: inProgressTasks.length,
+  COMPLETED: completedTasks.length,
+};
+
+const mostCommonStatus =
+  tasks.length === 0
+    ? null
+    : (
+        Object.entries(statusCounts).sort(
+          (firstItem, secondItem) =>
+            secondItem[1] - firstItem[1]
+        )[0]?.[0] ?? null
+      );
+
+const activeTasks = tasks.filter(
+  (task) => task.status !== "COMPLETED"
+);
+
+const longestPendingTask =
+  activeTasks.length === 0
+    ? null
+    : [...activeTasks]
+        .sort(
+          (firstTask, secondTask) =>
+            firstTask.createdAt.getTime() -
+            secondTask.createdAt.getTime()
+        )
+        .map((task) => ({
+          id: task.id,
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          daysPending: Math.max(
+            Math.floor(
+              (now.getTime() -
+                task.createdAt.getTime()) /
+                (24 * 60 * 60 * 1000)
+            ),
+            0
+          ),
+        }))[0];
+
+const tasksWithCompletionDate =
+  completedTasks.filter(
+    (task) => task.completedAt
+  );
+
+const averageCompletionTimeDays =
+  tasksWithCompletionDate.length === 0
+    ? null
+    : Number(
+        (
+          tasksWithCompletionDate.reduce(
+            (total, task) => {
+              const completionTime =
+                task.completedAt!.getTime() -
+                task.createdAt.getTime();
+
+              return (
+                total +
+                completionTime /
+                  (24 * 60 * 60 * 1000)
+              );
+            },
+            0
+          ) / tasksWithCompletionDate.length
+        ).toFixed(2)
+      );
+
+const completedOnTime =
+  tasksWithCompletionDate.filter(
+    (task) =>
+      task.completedAt! <= task.dueDate
+  ).length;
+
+const completedLate =
+  tasksWithCompletionDate.filter(
+    (task) =>
+      task.completedAt! > task.dueDate
+  ).length;
+
+
+
   const statusDistribution = [
     {
       name: "Pending",
@@ -319,16 +468,32 @@ export const generateTaskReport = async ({
     },
 
     summary: {
-      totalTasks: tasks.length,
-      pendingTasks: pendingTasks.length,
-      inProgressTasks: inProgressTasks.length,
-      completedTasks: completedTasks.length,
-      overdueTasks: overdueTasks.length,
-      lowPriorityTasks: lowPriorityTasks.length,
-      mediumPriorityTasks:
-        mediumPriorityTasks.length,
-      highPriorityTasks: highPriorityTasks.length,
-      completionRate,
+        totalTasks: tasks.length,
+        pendingTasks: pendingTasks.length,
+        inProgressTasks: inProgressTasks.length,
+        completedTasks: completedTasks.length,
+        overdueTasks: overdueTasks.length,
+
+        lowPriorityTasks: lowPriorityTasks.length,
+        mediumPriorityTasks:
+            mediumPriorityTasks.length,
+        highPriorityTasks: highPriorityTasks.length,
+
+        completionRate,
+        productivityScore,
+        averageTasksPerDay,
+        highPriorityPercentage,
+        overduePercentage,
+
+        mostCommonPriority,
+        mostCommonStatus,
+
+        reportDurationInDays,
+        averageCompletionTimeDays,
+        completedOnTime,
+        completedLate,
+
+        longestPendingTask,
     },
 
     charts: {
