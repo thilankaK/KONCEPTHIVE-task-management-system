@@ -13,3 +13,39 @@ body {
   font-family: Inter, sans-serif;
   background-color: #f8fafc;
 }
+
+
+
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  aside,
+  header,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .report-print-area {
+    width: 100% !important;
+  }
+
+  .report-print-area article,
+  .report-print-area section,
+  .report-print-area table {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

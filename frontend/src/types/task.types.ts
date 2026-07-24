@@ -30,6 +30,7 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   dueDate: string;
+  completedAt: string | null;
   createdAt: string;
   updatedAt: string;
   userId: string;

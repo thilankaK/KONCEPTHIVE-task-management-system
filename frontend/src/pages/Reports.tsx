@@ -1,6 +1,206 @@
+// import {
+//   useCallback,
+//   useEffect,
+//   useState,
+// } from "react";
+// import {
+//   FileBarChart2,
+//   LoaderCircle,
+// } from "lucide-react";
+// import dayjs from "dayjs";
+// import toast from "react-hot-toast";
+
+// import { getTaskReport } from "../api/report.api";
+// import ReportAnalyticsCards from "../components/reports/ReportAnalyticsCards";
+// import ReportFilters from "../components/reports/ReportFilters";
+// import ReportSummaryCards from "../components/reports/ReportSummaryCards";
+// import DashboardLayout from "../layouts/DashboardLayout";
+
+// import type {
+//   ReportPeriod,
+//   TaskReport,
+// } from "../types/report.types";
+
+// function Reports() {
+//   const [period, setPeriod] =
+//     useState<ReportPeriod>("monthly");
+
+//   const [startDate, setStartDate] =
+//     useState(
+//       dayjs().startOf("month").format(
+//         "YYYY-MM-DD"
+//       )
+//     );
+
+//   const [endDate, setEndDate] =
+//     useState(
+//       dayjs().endOf("month").format(
+//         "YYYY-MM-DD"
+//       )
+//     );
+
+//   const [report, setReport] =
+//     useState<TaskReport | null>(null);
+
+//   const [isLoading, setIsLoading] =
+//     useState(true);
+
+//   const loadReport = useCallback(async () => {
+//     if (
+//       period === "custom" &&
+//       (!startDate || !endDate)
+//     ) {
+//       toast.error(
+//         "Select both start and end dates."
+//       );
+
+//       return;
+//     }
+
+//     if (
+//       period === "custom" &&
+//       dayjs(startDate).isAfter(
+//         dayjs(endDate)
+//       )
+//     ) {
+//       toast.error(
+//         "Start date cannot be after end date."
+//       );
+
+//       return;
+//     }
+
+//     try {
+//       setIsLoading(true);
+
+//       const response =
+//         await getTaskReport({
+//           period,
+//           startDate:
+//             period === "custom"
+//               ? startDate
+//               : undefined,
+//           endDate:
+//             period === "custom"
+//               ? endDate
+//               : undefined,
+//         });
+
+//       setReport(response.data);
+//     } catch (error) {
+//       console.error(
+//         "Load report error:",
+//         error
+//       );
+
+//       toast.error(
+//         "Unable to generate the report."
+//       );
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, [period, startDate, endDate]);
+
+//   useEffect(() => {
+//     loadReport();
+//   }, []);
+
+//   return (
+//     <DashboardLayout>
+//       <div>
+//         <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+//           <div>
+//             <div className="mb-3 flex items-center gap-3">
+//               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+//                 <FileBarChart2 className="h-6 w-6" />
+//               </div>
+
+//               <div>
+//                 <h1 className="text-3xl font-bold text-slate-900">
+//                   Task Reports
+//                 </h1>
+
+//                 <p className="mt-1 text-slate-500">
+//                   Analyze task productivity,
+//                   performance and deadlines.
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+
+//           {report && (
+//             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+//               Generated{" "}
+//               <span className="font-semibold text-slate-700">
+//                 {dayjs(
+//                   report.report.generatedAt
+//                 ).format(
+//                   "DD MMM YYYY, hh:mm A"
+//                 )}
+//               </span>
+//             </div>
+//           )}
+//         </div>
+
+//         <ReportFilters
+//           period={period}
+//           startDate={startDate}
+//           endDate={endDate}
+//           isLoading={isLoading}
+//           onPeriodChange={setPeriod}
+//           onStartDateChange={setStartDate}
+//           onEndDateChange={setEndDate}
+//           onGenerate={loadReport}
+//         />
+
+//         {isLoading && !report ? (
+//           <div className="mt-6 flex min-h-80 items-center justify-center rounded-3xl border border-slate-200 bg-white">
+//             <div className="text-center">
+//               <LoaderCircle className="mx-auto h-9 w-9 animate-spin text-blue-600" />
+
+//               <p className="mt-4 text-sm text-slate-500">
+//                 Generating report analytics...
+//               </p>
+//             </div>
+//           </div>
+//         ) : report ? (
+//           <>
+//             <ReportSummaryCards
+//               summary={report.summary}
+//             />
+
+//             <ReportAnalyticsCards
+//               summary={report.summary}
+//             />
+
+//             <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
+//               <h2 className="text-xl font-bold text-slate-900">
+//                 Charts, Task Table and Exports
+//               </h2>
+
+//               <p className="mt-2 text-sm text-slate-500">
+//                 The report charts, full task table,
+//                 PDF, CSV and Excel exports will be
+//                 added in the next step.
+//               </p>
+//             </div>
+//           </>
+//         ) : null}
+//       </div>
+//     </DashboardLayout>
+//   );
+// }
+
+// export default Reports;
+
+
+
+
+
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -9,11 +209,17 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 
 import { getTaskReport } from "../api/report.api";
 import ReportAnalyticsCards from "../components/reports/ReportAnalyticsCards";
+import ReportCharts from "../components/reports/ReportCharts";
+import ReportExportButtons from "../components/reports/ReportExportButtons";
 import ReportFilters from "../components/reports/ReportFilters";
 import ReportSummaryCards from "../components/reports/ReportSummaryCards";
+import ReportTaskTable from "../components/reports/ReportTaskTable";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import type {
@@ -27,16 +233,16 @@ function Reports() {
 
   const [startDate, setStartDate] =
     useState(
-      dayjs().startOf("month").format(
-        "YYYY-MM-DD"
-      )
+      dayjs()
+        .startOf("month")
+        .format("YYYY-MM-DD")
     );
 
   const [endDate, setEndDate] =
     useState(
-      dayjs().endOf("month").format(
-        "YYYY-MM-DD"
-      )
+      dayjs()
+        .endOf("month")
+        .format("YYYY-MM-DD")
     );
 
   const [report, setReport] =
@@ -44,6 +250,12 @@ function Reports() {
 
   const [isLoading, setIsLoading] =
     useState(true);
+
+  const [isExportingPdf, setIsExportingPdf] =
+    useState(false);
+
+  const reportContentRef =
+    useRef<HTMLDivElement | null>(null);
 
   const loadReport = useCallback(async () => {
     if (
@@ -53,7 +265,6 @@ function Reports() {
       toast.error(
         "Select both start and end dates."
       );
-
       return;
     }
 
@@ -66,7 +277,6 @@ function Reports() {
       toast.error(
         "Start date cannot be after end date."
       );
-
       return;
     }
 
@@ -105,6 +315,508 @@ function Reports() {
     loadReport();
   }, []);
 
+  const getReportFileName = (
+    extension: string
+  ) => {
+    const periodLabel =
+      report?.report.period || period;
+
+    return `task-report-${periodLabel}-${dayjs().format(
+      "YYYY-MM-DD"
+    )}.${extension}`;
+  };
+
+  const handleExportCsv = () => {
+    if (!report) {
+      return;
+    }
+
+    const headers = [
+      "Title",
+      "Description",
+      "Priority",
+      "Status",
+      "Due Date",
+      "Completed Date",
+      "Created Date",
+      "Updated Date",
+    ];
+
+    const rows = report.tasks.map((task) => [
+      task.title,
+      task.description || "",
+      task.priority,
+      task.status,
+      dayjs(task.dueDate).format(
+        "YYYY-MM-DD"
+      ),
+      task.completedAt
+        ? dayjs(task.completedAt).format(
+            "YYYY-MM-DD"
+          )
+        : "",
+      dayjs(task.createdAt).format(
+        "YYYY-MM-DD"
+      ),
+      dayjs(task.updatedAt).format(
+        "YYYY-MM-DD"
+      ),
+    ]);
+
+    const escapeCsvValue = (
+      value: string
+    ) =>
+      `"${value.replaceAll('"', '""')}"`;
+
+    const csvContent = [
+      headers
+        .map(escapeCsvValue)
+        .join(","),
+      ...rows.map((row) =>
+        row
+          .map((value) =>
+            escapeCsvValue(
+              String(value)
+            )
+          )
+          .join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+    link.download =
+      getReportFileName("csv");
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+    toast.success(
+      "CSV report downloaded."
+    );
+  };
+
+  const handleExportExcel = () => {
+    if (!report) {
+      return;
+    }
+
+    const taskRows = report.tasks.map(
+      (task) => ({
+        Title: task.title,
+        Description:
+          task.description || "",
+        Priority: task.priority,
+        Status: task.status,
+        "Due Date": dayjs(
+          task.dueDate
+        ).format("YYYY-MM-DD"),
+        "Completed Date":
+          task.completedAt
+            ? dayjs(
+                task.completedAt
+              ).format("YYYY-MM-DD")
+            : "",
+        "Created Date": dayjs(
+          task.createdAt
+        ).format("YYYY-MM-DD"),
+        "Updated Date": dayjs(
+          task.updatedAt
+        ).format("YYYY-MM-DD"),
+      })
+    );
+
+    const summaryRows = [
+      {
+        Metric: "Total Tasks",
+        Value:
+          report.summary.totalTasks,
+      },
+      {
+        Metric: "Pending Tasks",
+        Value:
+          report.summary.pendingTasks,
+      },
+      {
+        Metric: "In Progress",
+        Value:
+          report.summary
+            .inProgressTasks,
+      },
+      {
+        Metric: "Completed Tasks",
+        Value:
+          report.summary
+            .completedTasks,
+      },
+      {
+        Metric: "Overdue Tasks",
+        Value:
+          report.summary.overdueTasks,
+      },
+      {
+        Metric: "Completion Rate",
+        Value: `${report.summary.completionRate}%`,
+      },
+      {
+        Metric: "Productivity Score",
+        Value: `${report.summary.productivityScore}%`,
+      },
+      {
+        Metric: "Average Tasks / Day",
+        Value:
+          report.summary
+            .averageTasksPerDay,
+      },
+      {
+        Metric: "High Priority %",
+        Value: `${report.summary.highPriorityPercentage}%`,
+      },
+      {
+        Metric: "Overdue %",
+        Value: `${report.summary.overduePercentage}%`,
+      },
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const summarySheet =
+      XLSX.utils.json_to_sheet(
+        summaryRows
+      );
+
+    const tasksSheet =
+      XLSX.utils.json_to_sheet(
+        taskRows
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summarySheet,
+      "Summary"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      tasksSheet,
+      "Tasks"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      getReportFileName("xlsx")
+    );
+
+    toast.success(
+      "Excel report downloaded."
+    );
+  };
+
+//   const handleExportPdf = async () => {
+//     if (
+//       !report ||
+//       !reportContentRef.current
+//     ) {
+//       return;
+//     }
+
+//     try {
+//       setIsExportingPdf(true);
+
+//       const canvas =
+//         await html2canvas(
+//           reportContentRef.current,
+//           {
+//             scale: 1.5,
+//             useCORS: true,
+//             backgroundColor: "#f8fafc",
+//             windowWidth:
+//               reportContentRef.current
+//                 .scrollWidth,
+//           }
+//         );
+
+//       const imageData =
+//         canvas.toDataURL(
+//           "image/png"
+//         );
+
+//       const pdf = new jsPDF(
+//         "p",
+//         "mm",
+//         "a4"
+//       );
+
+//       const pageWidth =
+//         pdf.internal.pageSize.getWidth();
+
+//       const pageHeight =
+//         pdf.internal.pageSize.getHeight();
+
+//       const margin = 8;
+
+//       const printableWidth =
+//         pageWidth - margin * 2;
+
+//       const imageHeight =
+//         (canvas.height *
+//           printableWidth) /
+//         canvas.width;
+
+//       let heightLeft = imageHeight;
+//       let position = margin;
+
+//       pdf.addImage(
+//         imageData,
+//         "PNG",
+//         margin,
+//         position,
+//         printableWidth,
+//         imageHeight
+//       );
+
+//       heightLeft -=
+//         pageHeight - margin * 2;
+
+//       while (heightLeft > 0) {
+//         pdf.addPage();
+
+//         position =
+//           heightLeft -
+//           imageHeight +
+//           margin;
+
+//         pdf.addImage(
+//           imageData,
+//           "PNG",
+//           margin,
+//           position,
+//           printableWidth,
+//           imageHeight
+//         );
+
+//         heightLeft -=
+//           pageHeight - margin * 2;
+//       }
+
+//       pdf.save(
+//         getReportFileName("pdf")
+//       );
+
+//       toast.success(
+//         "PDF report downloaded."
+//       );
+//     } catch (error) {
+//       console.error(
+//         "PDF export error:",
+//         error
+//       );
+
+//       toast.error(
+//         "Unable to export PDF report."
+//       );
+//     } finally {
+//       setIsExportingPdf(false);
+//     }
+//   };
+
+
+
+
+const handleExportPdf = async () => {
+  const reportElement = reportContentRef.current;
+
+  if (!report || !reportElement) {
+    toast.error("Report content is not available.");
+    return;
+  }
+
+  try {
+    setIsExportingPdf(true);
+
+    toast.loading("Generating PDF...", {
+      id: "pdf-export",
+    });
+
+    // Charts and fonts render වෙන්න browser එකට පොඩි වෙලාවක් දෙයි.
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, 500)
+    );
+
+    const canvas = await html2canvas(
+      reportElement,
+      {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#f8fafc",
+        logging: false,
+
+        width: reportElement.scrollWidth,
+        height: reportElement.scrollHeight,
+
+        windowWidth:
+          reportElement.scrollWidth,
+        windowHeight:
+          reportElement.scrollHeight,
+
+        scrollX: 0,
+        scrollY: -window.scrollY,
+
+        onclone: (clonedDocument) => {
+          const clonedReport =
+            clonedDocument.querySelector(
+              ".report-print-area"
+            ) as HTMLElement | null;
+
+          if (clonedReport) {
+            clonedReport.style.width =
+              `${reportElement.scrollWidth}px`;
+
+            clonedReport.style.maxWidth =
+              "none";
+
+            clonedReport.style.overflow =
+              "visible";
+          }
+        },
+      }
+    );
+
+    if (
+      canvas.width === 0 ||
+      canvas.height === 0
+    ) {
+      throw new Error(
+        "The report canvas could not be generated."
+      );
+    }
+
+    const imageData =
+      canvas.toDataURL(
+        "image/jpeg",
+        0.92
+      );
+
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+      compress: true,
+    });
+
+    const pageWidth =
+      pdf.internal.pageSize.getWidth();
+
+    const pageHeight =
+      pdf.internal.pageSize.getHeight();
+
+    const margin = 8;
+
+    const printableWidth =
+      pageWidth - margin * 2;
+
+    const printableHeight =
+      pageHeight - margin * 2;
+
+    const imageHeight =
+      (canvas.height *
+        printableWidth) /
+      canvas.width;
+
+    let renderedHeight = 0;
+    let pageNumber = 1;
+
+    while (
+      renderedHeight < imageHeight
+    ) {
+      if (pageNumber > 1) {
+        pdf.addPage();
+      }
+
+      const imageY =
+        margin - renderedHeight;
+
+      pdf.addImage(
+        imageData,
+        "JPEG",
+        margin,
+        imageY,
+        printableWidth,
+        imageHeight,
+        undefined,
+        "FAST"
+      );
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(
+        100,
+        116,
+        139
+      );
+
+      pdf.text(
+        `TaskFlow Report • Page ${pageNumber}`,
+        pageWidth / 2,
+        pageHeight - 3,
+        {
+          align: "center",
+        }
+      );
+
+      renderedHeight +=
+        printableHeight;
+
+      pageNumber += 1;
+    }
+
+    pdf.save(
+      getReportFileName("pdf")
+    );
+
+    toast.success(
+      "PDF report downloaded.",
+      {
+        id: "pdf-export",
+      }
+    );
+  } catch (error) {
+    console.error(
+      "PDF export error:",
+      error
+    );
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to export PDF report.";
+
+    toast.error(message, {
+      id: "pdf-export",
+    });
+  } finally {
+    setIsExportingPdf(false);
+  }
+};
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <DashboardLayout>
       <div>
@@ -128,18 +840,45 @@ function Reports() {
             </div>
           </div>
 
-          {report && (
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
-              Generated{" "}
-              <span className="font-semibold text-slate-700">
-                {dayjs(
-                  report.report.generatedAt
-                ).format(
-                  "DD MMM YYYY, hh:mm A"
-                )}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col gap-3 xl:items-end">
+            {report && (
+              <ReportExportButtons
+                isExportingPdf={
+                  isExportingPdf
+                }
+                disabled={
+                  isLoading ||
+                  !report
+                }
+                onExportPdf={
+                  handleExportPdf
+                }
+                onExportCsv={
+                  handleExportCsv
+                }
+                onExportExcel={
+                  handleExportExcel
+                }
+                onPrint={
+                  handlePrint
+                }
+              />
+            )}
+
+            {report && (
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+                Generated{" "}
+                <span className="font-semibold text-slate-700">
+                  {dayjs(
+                    report.report
+                      .generatedAt
+                  ).format(
+                    "DD MMM YYYY, hh:mm A"
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <ReportFilters
@@ -148,8 +887,12 @@ function Reports() {
           endDate={endDate}
           isLoading={isLoading}
           onPeriodChange={setPeriod}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={
+            setStartDate
+          }
+          onEndDateChange={
+            setEndDate
+          }
           onGenerate={loadReport}
         />
 
@@ -159,12 +902,80 @@ function Reports() {
               <LoaderCircle className="mx-auto h-9 w-9 animate-spin text-blue-600" />
 
               <p className="mt-4 text-sm text-slate-500">
-                Generating report analytics...
+                Generating report
+                analytics...
               </p>
             </div>
           </div>
         ) : report ? (
-          <>
+          <div
+            ref={reportContentRef}
+            className="report-print-area"
+          >
+            <div className="mt-6 rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 p-7 text-white shadow-xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">
+                TaskFlow
+              </p>
+
+              <h2 className="mt-3 text-3xl font-bold">
+                {
+                  report.report.title
+                }
+              </h2>
+
+              <div className="mt-5 grid gap-4 text-sm text-slate-200 sm:grid-cols-3">
+                <div>
+                  <p className="text-slate-400">
+                    Period
+                  </p>
+
+                  <p className="mt-1 font-semibold capitalize text-white">
+                    {
+                      report.report
+                        .period
+                    }
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-slate-400">
+                    Date Range
+                  </p>
+
+                  <p className="mt-1 font-semibold text-white">
+                    {dayjs(
+                      report.report
+                        .startDate
+                    ).format(
+                      "DD MMM YYYY"
+                    )}{" "}
+                    –{" "}
+                    {dayjs(
+                      report.report
+                        .endDate
+                    ).format(
+                      "DD MMM YYYY"
+                    )}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-slate-400">
+                    Generated
+                  </p>
+
+                  <p className="mt-1 font-semibold text-white">
+                    {dayjs(
+                      report.report
+                        .generatedAt
+                    ).format(
+                      "DD MMM YYYY"
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <ReportSummaryCards
               summary={report.summary}
             />
@@ -173,18 +984,24 @@ function Reports() {
               summary={report.summary}
             />
 
-            <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <h2 className="text-xl font-bold text-slate-900">
-                Charts, Task Table and Exports
-              </h2>
+            <ReportCharts
+              charts={report.charts}
+            />
 
-              <p className="mt-2 text-sm text-slate-500">
-                The report charts, full task table,
-                PDF, CSV and Excel exports will be
-                added in the next step.
-              </p>
-            </div>
-          </>
+            <ReportTaskTable
+              tasks={report.tasks}
+            />
+
+            <footer className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-center text-sm text-slate-500">
+              Generated by TaskFlow Task
+              Management System on{" "}
+              {dayjs(
+                report.report.generatedAt
+              ).format(
+                "DD MMM YYYY, hh:mm A"
+              )}
+            </footer>
+          </div>
         ) : null}
       </div>
     </DashboardLayout>
