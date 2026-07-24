@@ -97,11 +97,30 @@ export const updateTask = async (
     return null;
   }
 
+  let completedAt = existingTask.completedAt;
+
+  if (
+    data.status === "COMPLETED" &&
+    existingTask.status !== "COMPLETED"
+  ) {
+    completedAt = new Date();
+  }
+
+  if (
+    data.status &&
+    data.status !== "COMPLETED"
+  ) {
+    completedAt = null;
+  }
+
   return prisma.task.update({
     where: {
       id: taskId,
     },
-    data,
+    data: {
+      ...data,
+      completedAt,
+    },
   });
 };
 
