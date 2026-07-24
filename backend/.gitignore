@@ -1,5 +1,10 @@
-node_modules
-# Keep environment variables out of version control
+node_modules/
 .env
 
-/generated/prisma
+generated/prisma/
+
+dist/
+
+coverage/
+
+*.log
