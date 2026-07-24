@@ -124,6 +124,7 @@
 
 import { useState } from "react";
 import {
+  Bell,
   CheckSquare,
   ChevronLeft,
   ChevronRight,
@@ -168,6 +169,11 @@ function Sidebar({
       icon: CheckSquare,
       path: "/tasks",
     },
+    {
+      label: "Notifications",
+      icon: Bell,
+      path: "/notifications",
+  },
   ];
 
   return (

@@ -204,6 +204,7 @@ import Login from "./pages/Login";
 import Tasks from "./pages/Tasks";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -236,6 +237,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="*"
           element={
