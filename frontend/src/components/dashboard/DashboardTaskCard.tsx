@@ -15,6 +15,7 @@ import type {
 
 interface DashboardTaskCardProps {
   task: Task;
+  onClick: (task: Task) => void;
 }
 
 const priorityStyles: Record<TaskPriority, string> = {
@@ -39,13 +40,17 @@ const formatLabel = (value: string) =>
 
 function DashboardTaskCard({
   task,
+  onClick,
 }: DashboardTaskCardProps) {
   const isOverdue =
     dayjs(task.dueDate).isBefore(dayjs(), "day") &&
     task.status !== "COMPLETED";
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <article 
+        onClick={() => onClick(task)}
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+      
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="truncate font-bold text-slate-900">

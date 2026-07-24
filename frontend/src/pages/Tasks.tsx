@@ -112,6 +112,10 @@ import TaskTable from "../components/tasks/TaskTable";
 import TaskToolbar from "../components/tasks/TaskToolbar";
 import DashboardLayout from "../layouts/DashboardLayout";
 
+import { useLocation } from "react-router-dom";
+
+import TaskDetailsModal from "../components/tasks/TaskDetailsModal";
+
 import type {
   Task,
   TaskFormData,
@@ -121,6 +125,13 @@ import type {
 } from "../types/task.types";
 
 function Tasks() {
+
+  const location = useLocation();
+  const [taskToView, setTaskToView] =
+    useState<Task | null>(null);
+
+
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] =
@@ -170,6 +181,36 @@ function Tasks() {
 
     return () => window.clearTimeout(timeoutId);
   }, [loadTasks]);
+
+
+  useEffect(() => {
+  const routeState = location.state as
+    | {
+        action?: "edit" | "delete";
+        task?: Task;
+      }
+    | null;
+
+  if (!routeState?.task) {
+    return;
+  }
+
+  if (routeState.action === "edit") {
+    setSelectedTask(routeState.task);
+    setIsTaskModalOpen(true);
+  }
+
+  if (routeState.action === "delete") {
+    setTaskToDelete(routeState.task);
+  }
+
+  window.history.replaceState(
+    {},
+    document.title
+  );
+}, [location.state]);
+
+
 
   const handleCreateTask = () => {
     setSelectedTask(null);
@@ -268,6 +309,7 @@ function Tasks() {
           <TaskTable
             tasks={tasks}
             isLoading={isLoading}
+            onView={setTaskToView}
             onEdit={handleEditTask}
             onDelete={setTaskToDelete}
           />
@@ -287,6 +329,20 @@ function Tasks() {
         isDeleting={isDeleting}
         onClose={() => setTaskToDelete(null)}
         onConfirm={handleDeleteTask}
+      />
+
+
+      <TaskDetailsModal
+        task={taskToView}
+        onClose={() => setTaskToView(null)}
+        onEdit={(task) => {
+          setTaskToView(null);
+          handleEditTask(task);
+        }}
+        onDelete={(task) => {
+          setTaskToView(null);
+          setTaskToDelete(task);
+        }}
       />
     </DashboardLayout>
   );

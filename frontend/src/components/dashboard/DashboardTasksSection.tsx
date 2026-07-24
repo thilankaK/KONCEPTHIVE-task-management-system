@@ -7,10 +7,12 @@ import type { Task } from "../../types/task.types";
 
 interface DashboardTasksSectionProps {
   tasks: Task[];
+  onTaskClick: (task: Task) => void;
 }
 
 function DashboardTasksSection({
   tasks,
+  onTaskClick,
 }: DashboardTasksSectionProps) {
   const navigate = useNavigate();
 
@@ -77,9 +79,10 @@ function DashboardTasksSection({
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {upcomingTasks.map((task) => (
-            <DashboardTaskCard
-              key={task.id}
-              task={task}
+           <DashboardTaskCard
+                key={task.id}
+                task={task}
+                onClick={onTaskClick}
             />
           ))}
         </div>

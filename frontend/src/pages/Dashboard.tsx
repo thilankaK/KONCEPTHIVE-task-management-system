@@ -201,6 +201,9 @@ import DashboardCharts from "../components/dashboard/DashboardCharts";
 import DashboardTasksSection from "../components/dashboard/DashboardTasksSection";
 import StatCard from "../components/dashboard/StatCard";
 import DashboardLayout from "../layouts/DashboardLayout";
+import { useNavigate } from "react-router-dom";
+
+import TaskDetailsModal from "../components/tasks/TaskDetailsModal";
 
 import type {
   DashboardStats,
@@ -220,6 +223,11 @@ function Dashboard() {
     useState<DashboardStats>(initialStats);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const navigate = useNavigate();
+  const [selectedTask, setSelectedTask] =
+    useState<Task | null>(null);
+
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -285,6 +293,28 @@ function Dashboard() {
     },
   ];
 
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(null);
+
+    navigate("/tasks", {
+      state: {
+        action: "edit",
+        task,
+      },
+    });
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setSelectedTask(null);
+
+    navigate("/tasks", {
+      state: {
+        action: "delete",
+        task,
+      },
+    });
+  };
+
   return (
     <DashboardLayout>
       <div>
@@ -328,8 +358,20 @@ function Dashboard() {
 
             <DashboardCharts tasks={tasks} />
 
-            <DashboardTasksSection tasks={tasks} />
+            <DashboardTasksSection
+              tasks={tasks}
+              onTaskClick={setSelectedTask}
+            />
+
+
+            <TaskDetailsModal
+              task={selectedTask}
+              onClose={() => setSelectedTask(null)}
+              onEdit={handleEditTask}
+              onDelete={handleDeleteTask}
+            />
           </>
+          
         )}
       </div>
     </DashboardLayout>
