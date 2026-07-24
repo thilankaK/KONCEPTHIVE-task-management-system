@@ -120,11 +120,14 @@
 
 
 
+import {
+  useEffect,
+  useState,
+} from "react";
 
-
-import { useState } from "react";
 import {
   Bell,
+  CalendarDays,
   CheckSquare,
   ChevronLeft,
   ChevronRight,
@@ -135,6 +138,8 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import LogoutConfirmModal from "../common/LogoutConfirmModal";
+import SidebarCalendar from "./SidebarCalendar";
+import SidebarClock from "./SidebarClock";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -159,6 +164,12 @@ function Sidebar({
     navigate("/");
   };
 
+  const [isCalendarOpen, setIsCalendarOpen] =
+    useState(false);
+
+  const [currentDate, setCurrentDate] =
+    useState(new Date());
+
   const menuItems = [
     {
       label: "Dashboard",
@@ -181,6 +192,22 @@ function Sidebar({
       path: "/reports",
     },
   ];
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (collapsed) {
+      setIsCalendarOpen(false);
+    }
+  }, [collapsed]);
+
 
   return (
     <>
@@ -216,7 +243,13 @@ function Sidebar({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-2 px-3 py-6">
+        <nav
+          className={`space-y-2 overflow-y-auto px-3 py-6 transition-all duration-300 ${
+            isCalendarOpen
+              ? "max-h-44 flex-none"
+              : "flex-1"
+          }`}
+        >
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -226,12 +259,19 @@ function Sidebar({
               <button
                 key={item.label}
                 type="button"
-                onClick={() => navigate(item.path)}
+                onClick={() =>
+                  navigate(item.path)
+                }
                 className={`flex w-full items-center rounded-xl px-3 py-3 text-left transition ${
                   isActive
                     ? "bg-blue-600 text-white"
                     : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 }`}
+                title={
+                  collapsed
+                    ? item.label
+                    : undefined
+                }
               >
                 <Icon className="h-5 w-5 shrink-0" />
 
@@ -244,7 +284,66 @@ function Sidebar({
             );
           })}
         </nav>
+        
+        <div className="space-y-3 px-3 pb-3">
+  {!collapsed && (
+    <div
+      className={`grid transition-all duration-300 ${
+        isCalendarOpen
+          ? "grid-rows-[1fr] opacity-100"
+          : "grid-rows-[0fr] opacity-0"
+      }`}
+    >
+      <div className="overflow-hidden">
+        <SidebarCalendar
+          currentDate={currentDate}
+        />
+      </div>
+    </div>
+  )}
 
+  <button
+    type="button"
+    onClick={() =>
+      setIsCalendarOpen(
+        (current) => !current
+      )
+    }
+    className={`flex w-full items-center rounded-xl px-3 py-3 text-left transition ${
+      isCalendarOpen
+        ? "bg-blue-600 text-white"
+        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+    }`}
+    title={
+      collapsed
+        ? "Calendar"
+        : undefined
+    }
+  >
+    <CalendarDays className="h-5 w-5 shrink-0" />
+
+    {!collapsed && (
+      <>
+        <span className="ml-3 flex-1 font-medium">
+          Calendar
+        </span>
+
+        <ChevronRight
+          className={`h-4 w-4 transition-transform duration-300 ${
+            isCalendarOpen
+              ? "rotate-90"
+              : ""
+          }`}
+        />
+      </>
+    )}
+  </button>
+
+  <SidebarClock
+    currentDate={currentDate}
+    collapsed={collapsed}
+  />
+</div>
         <div className="border-t border-slate-800 p-3">
           <button
             type="button"
