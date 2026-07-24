@@ -111,6 +111,7 @@ import TaskModal from "../components/tasks/TaskModal";
 import TaskTable from "../components/tasks/TaskTable";
 import TaskToolbar from "../components/tasks/TaskToolbar";
 import DashboardLayout from "../layouts/DashboardLayout";
+import EditConfirmModal from "../components/tasks/EditConfirmModal";
 
 import { useLocation } from "react-router-dom";
 
@@ -153,6 +154,9 @@ function Tasks() {
     useState(false);
   const [isDeleting, setIsDeleting] =
     useState(false);
+  
+  const [taskToEditConfirm, setTaskToEditConfirm] =
+    useState<Task | null>(null);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -195,9 +199,8 @@ function Tasks() {
     return;
   }
 
-  if (routeState.action === "edit") {
-    setSelectedTask(routeState.task);
-    setIsTaskModalOpen(true);
+ if (routeState.action === "edit") {
+    setTaskToEditConfirm(routeState.task);
   }
 
   if (routeState.action === "delete") {
@@ -218,7 +221,15 @@ function Tasks() {
   };
 
   const handleEditTask = (task: Task) => {
-    setSelectedTask(task);
+    setTaskToEditConfirm(task);
+  };
+  const handleConfirmEdit = () => {
+    if (!taskToEditConfirm) {
+      return;
+    }
+
+    setSelectedTask(taskToEditConfirm);
+    setTaskToEditConfirm(null);
     setIsTaskModalOpen(true);
   };
 
@@ -337,12 +348,18 @@ function Tasks() {
         onClose={() => setTaskToView(null)}
         onEdit={(task) => {
           setTaskToView(null);
-          handleEditTask(task);
+          setTaskToEditConfirm(task);
         }}
         onDelete={(task) => {
           setTaskToView(null);
           setTaskToDelete(task);
         }}
+      />
+
+      <EditConfirmModal
+        task={taskToEditConfirm}
+        onClose={() => setTaskToEditConfirm(null)}
+        onConfirm={handleConfirmEdit}
       />
     </DashboardLayout>
   );
